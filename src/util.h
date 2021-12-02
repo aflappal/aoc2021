@@ -10,17 +10,17 @@ namespace au {
 
 using solve_func = std::function<void ()>;
 void solve_runner(solve_func solve_a, solve_func solve_b) {
-    std::cout << "a:" << std::endl;
+    std::cout << "a:\n";
     solve_a();
-    std::cout << "-------------------------" << std::endl
-              << "b:" << std::endl;
+    std::cout << "-------------------------\n"
+              << "b:\n";
     solve_b();
 }
 
 std::ifstream get_ifstream(std::string path) {
     std::ifstream ifs(path);
     if (!ifs) {
-        std::cerr << "file not found" << std::endl;
+        std::cerr << "file not found\n";
         std::exit(1);
     }
 

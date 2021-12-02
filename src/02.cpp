@@ -1,7 +1,7 @@
 #include <iostream>
 #include "util.h"
 
-using std::cout, std::cerr, std::endl;
+using std::cout, std::cerr;
 
 struct CommandPair {
     std::string dir;
@@ -24,12 +24,12 @@ void solve_a() {
         } else if (command.dir == "up") {
             z -= command.magnitude;
         } else {
-            cerr << "got weird command " << command.dir << endl;
+            cerr << "got weird command " << command.dir << '\n';
             std::exit(2);
         }
     }
 
-    cout << "x = " << x << ", z = " << z << ", x * z = " << x * z << endl;
+    cout << "x = " << x << ", z = " << z << ", x * z = " << x * z << '\n';
 }
 
 void solve_b() {
@@ -43,12 +43,12 @@ void solve_b() {
         } else if (command.dir == "up") {
             aim -= command.magnitude;
         } else {
-            cerr << "got weird command " << command.dir << endl;
+            cerr << "got weird command " << command.dir << '\n';
             std::exit(2);
         }
     }
 
-    cout << "x = " << x << ", z = " << z << ", x * z = " << x * z << endl;
+    cout << "x = " << x << ", z = " << z << ", x * z = " << x * z << '\n';
 }
 
 int main() {
