@@ -52,5 +52,6 @@ void solve_b() {
 }
 
 int main() {
+    std::ios::sync_with_stdio(false);
     au::solve_runner(solve_a, solve_b);
 }
