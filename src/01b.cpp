@@ -1,6 +1,7 @@
-#include <array>
 #include <fstream>
+#include <iterator>
 #include <iostream>
+#include <vector>
 
 int main() {
     std::ifstream ifs("inputs/01a.txt");
@@ -9,18 +10,14 @@ int main() {
         return 1;
     }
 
-    auto incs = 0;
-    auto idx = 0;
-    int curr;
-    std::array<int, 3> prev;
+    std::vector<int> depths(std::istream_iterator<int>{ifs},
+                            std::istream_iterator<int>{});
 
-    ifs >> prev[0] >> prev[1] >> prev[2];
-    while (ifs >> curr) {
-        if (curr > prev[idx]) {
+    auto incs = 0;
+    for (std::vector<int>::size_type i = 3; i < depths.size(); i++) {
+        if (depths[i] > depths[i-3]) {
             incs++;
         }
-        prev[idx] = curr;
-        idx = (idx + 1) % 3;
     }
     
     std::cout << incs << std::endl;
