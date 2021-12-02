@@ -1,7 +1,7 @@
-#include <fstream>
 #include <iostream>
-#include <iterator>
-#include <vector>
+#include "util.h"
+
+using std::cout, std::cerr, std::endl;
 
 struct CommandPair {
     std::string dir;
@@ -12,16 +12,9 @@ std::istream& operator>>(std::istream& stream, CommandPair& in) {
     return stream >> in.dir >> in.magnitude;
 }
 
-int main() {
-    std::ifstream ifs("inputs/02.txt");
-    if (!ifs) {
-        std::cerr << "file not found" << std::endl;
-        return 1;
-    }
+const auto commands = au::get_input_vector_from_file<CommandPair>("inputs/02.txt");
 
-    std::vector<CommandPair> commands(std::istream_iterator<CommandPair>{ifs},
-                                      std::istream_iterator<CommandPair>{});
-
+void solve_a() {
     auto x = 0, z = 0;
     for (auto command : commands) {
         if (command.dir == "forward") {
@@ -31,13 +24,33 @@ int main() {
         } else if (command.dir == "up") {
             z -= command.magnitude;
         } else {
-            std::cerr << "got weird command " << command.dir << std::endl;
-            return 2;
+            cerr << "got weird command " << command.dir << endl;
+            std::exit(2);
         }
     }
 
-    std::cout << "x = " << x << ", z = " << z << ", x * z = " << x * z
-              << std::endl;
+    cout << "x = " << x << ", z = " << z << ", x * z = " << x * z << endl;
+}
 
-    return 0;
+void solve_b() {
+    auto x = 0, z = 0, aim = 0;
+    for (auto command : commands) {
+        if (command.dir == "forward") {
+            x += command.magnitude;
+            z += aim * command.magnitude;
+        } else if (command.dir == "down") {
+            aim += command.magnitude;
+        } else if (command.dir == "up") {
+            aim -= command.magnitude;
+        } else {
+            cerr << "got weird command " << command.dir << endl;
+            std::exit(2);
+        }
+    }
+
+    cout << "x = " << x << ", z = " << z << ", x * z = " << x * z << endl;
+}
+
+int main() {
+    au::solve_runner(solve_a, solve_b);
 }
