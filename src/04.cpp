@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <numeric>
+#include <ranges>
 #include "util.h"
 
 using std::cout, std::cerr;
@@ -29,6 +31,7 @@ struct Board {
           col_hits_{0}
     {}
 
+    // Checks if board won when val was called.
     bool check(int val) {
         for (std::size_t i = 0; i < squares_.size(); i++) {
             auto& row = squares_[i];
@@ -40,7 +43,7 @@ struct Board {
                     if (row_hits_[i] == 5 || col_hits_[j] == 5) {
                         return true;
                     }
-                    break;
+                    return false;
                 }
             }
         }
@@ -48,14 +51,17 @@ struct Board {
         return false;
     }
 
+    auto flat_view() const {
+        return std::views::join(squares_);
+    }
+
     int sum_of_unmarked() const {
-        int sum = 0;
-        for (const auto& row : squares_) {
-            for (const auto& square : row) {
-                if (!square.marked) sum += square.val;
-            }
-        }
-        return sum;
+        auto get_val = [](const auto& square) { return square.val; };
+        auto not_marked = [](const auto& square) { return !square.marked; };
+        auto view = flat_view()
+                  | std::views::filter(not_marked)
+                  | std::views::transform(get_val);
+        return std::accumulate(view.begin(), view.end(), 0);
     }
 
     void dump() const {
