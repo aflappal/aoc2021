@@ -7,7 +7,7 @@ BUILD_DIR := ./build
 # MAINS := guess
 # guess_deps := feikki.o
 # TESTS := test_guess
-MAINS := 01a 01b 02 03
+MAINS := 01a 01b 02 03 04
 TESTS :=
 TARGETS := $(MAINS) $(TESTS)
 BUILD_TARGETS := $(TARGETS:%=$(BUILD_DIR)/%)
@@ -39,8 +39,8 @@ $(BUILD_TARGETS):
 test: $(TESTS)
 	$(foreach test,$^,$(BUILD_DIR)/$(test))
 
-tags: $(SRC)
-	ctags $(SRC)
+tags: $(wildcard src/*)
+	ctags $^
 
 .PHONY: clean
 clean:
