@@ -9,8 +9,6 @@
 
 using std::cout, std::cerr;
 
-//const auto vals = au::get_input_vector_from_file<std::bitset<bitwidth>>("inputs/03.txt");
-
 struct Square {
     Square(int v) : val{v}, marked{false} {}
     bool check(int v) {
@@ -86,6 +84,7 @@ struct Board {
         }
         cout << '\n';
     }
+
     std::vector<std::vector<Square>> squares_;
     std::array<int, 5> row_hits_;
     std::array<int, 5> col_hits_;
@@ -125,29 +124,29 @@ const auto input = BingoInput(ifs);
 
 void solve_a() {
     auto [nums, boards] = input;
-    for (auto& num : nums) cout << num << ' ';
+    for (auto num : nums) cout << num << ' ';
     cout << '\n';
-    for (auto& num : nums) {
-        for (auto& board : boards) {
-            if (board.check(num)) {
-                board.dump();
-                auto sum = board.sum_of_unmarked();
-                cout << sum << "*" << num << " = " << sum * num << '\n';
-                goto a_end;
-            }
+
+    for (auto num : nums) {
+        auto won = [=](Board& board) { return board.check(num); };
+        auto winner = std::find_if(boards.begin(), boards.end(), won);
+        if (winner != boards.end()) {
+            winner->dump();
+            auto sum = winner->sum_of_unmarked();
+            cout << sum << "*" << num << " = " << sum * num << '\n';
+            break;
         }
     }
-a_end: ;
 }
 
 void solve_b() {
     auto [nums, boards] = input;
-    auto end = boards.end();
-    for (auto& num : nums) {
+    auto still_in_end = boards.end();
+    for (auto num : nums) {
+        auto won = [=](Board& board) { return board.check(num); };
         // assuming there's only one board that wins last!
-        end = std::remove_if(boards.begin(), end,
-                             [=](auto& board) {return board.check(num);});
-        if (boards.begin() == end) {
+        still_in_end = std::remove_if(boards.begin(), still_in_end, won);
+        if (boards.begin() == still_in_end) {
             // Apparently the last one remains first. Is that always the case?
             auto& loser = boards.front();
             loser.dump();
