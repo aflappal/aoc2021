@@ -27,15 +27,19 @@ std::ifstream get_ifstream(std::string path) {
     return ifs;
 }
 
+template <typename T>
+std::vector<T> get_vector_from_stream(std::istream& is) {
+    return std::vector<T>(std::istream_iterator<T>{is},
+                          std::istream_iterator<T>{});
+}
+
 // Reads file into vector of T. Assumes T has a defined operator>>. T can for
 // example be a pair of (string, int) which would need a >> that reads the
 // stream into T properly.
 template <typename T>
 std::vector<T> get_input_vector_from_file(std::string path) {
     auto ifs = get_ifstream(path);
-
-    return std::vector<T>(std::istream_iterator<T>{ifs},
-                          std::istream_iterator<T>{});
+    return get_vector_from_stream<T>(ifs);
 }
 
 } // namespace au
