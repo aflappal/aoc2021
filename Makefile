@@ -7,7 +7,7 @@ BUILD_DIR := ./build
 # MAINS := guess
 # guess_deps := feikki.o
 # TESTS := test_guess
-MAINS := 01a 01b 02 03 04 05 06
+MAINS := 01a 01b 02 03 04 05 06 07
 TESTS :=
 TARGETS := $(MAINS) $(TESTS)
 BUILD_TARGETS := $(TARGETS:%=$(BUILD_DIR)/%)
