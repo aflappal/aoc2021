@@ -18,24 +18,31 @@ auto parse() {
 
 const auto positions = parse();
 
+// Reorders enough elements of vals to find the middle
+auto middlest(std::vector<int>& vals) {
+    auto m = vals.begin() + vals.size()/2;
+    std::nth_element(vals.begin(), m, vals.end());
+    return *m;
+}
+
+// vals copied because we want to use the untransformed vals later
+auto distances_to(std::vector<int> vals, int to) {
+    auto dist = [=](int v) { return std::abs(v - to); };
+    std::transform(vals.begin(), vals.end(), vals.begin(), dist);
+    return std::accumulate(vals.begin(), vals.end(), 0);
+}
+
 void solve_a() {
     auto vals = positions;
 
-    // calculate median
-    auto m = vals.begin() + vals.size()/2;
-    std::nth_element(vals.begin(), m, vals.end());
-    int median;
-    if ((vals.size() % 2) == 0) {
-        auto k = std::max_element(vals.begin(), m);
-        median = (*m + *k) / 2;
-    } else {
-        median = *m;
-    }
+    // Calculate middlest number, meaning median when vals.size() is odd or
+    // either of the middle numbers (so median = avg of the middle numbers is
+    // not needed here; the distances to either will be the same even if the
+    // numbers differ) when vals.size() is even.
+    auto middle = middlest(vals);
 
-    // calculate sum of distances to median
-    auto dist_median = [=](int v) { return std::abs(v - median); };
-    std::transform(vals.begin(), vals.end(), vals.begin(), dist_median);
-    cout << std::accumulate(vals.begin(), vals.end(), 0) << '\n';
+    // calculate sum of distances to middle
+    cout << distances_to(vals, middle) << '\n';
 }
 
 void solve_b() {
