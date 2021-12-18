@@ -3,7 +3,8 @@
 #include <sstream>
 #include <numeric>
 #include <vector>
-#include <limits>
+#include <ranges>
+#include <cmath>
 #include "util.h"
 
 using std::cout, std::cerr;
@@ -29,15 +30,18 @@ auto middlest(std::vector<int>& vals) {
     return *m;
 }
 
-// vals copied because we want to use the untransformed vals later
-auto distances_to(std::vector<int> vals, int to, std::string part) {
-    auto dist_a = [=](int v) { return std::abs(v - to); };
-    auto dist_b = [&](int v) { auto n = dist_a(v); return n*(n+1)/2; };
-    if (part == "a")
-        std::transform(vals.begin(), vals.end(), vals.begin(), dist_a);
-    else
-        std::transform(vals.begin(), vals.end(), vals.begin(), dist_b);
-    return std::accumulate(vals.begin(), vals.end(), 0);
+auto distances_to(std::vector<int>& vals, int to, std::string part) {
+    auto dist = [&](int v) -> int {
+        auto basic_dist = std::abs(v - to);
+        // Silly way to select but can't easily select between multiple lambdas
+        // since they have unique types
+        if (part == "a")
+            return basic_dist;
+        else
+            return basic_dist*(basic_dist+1)/2;
+    };
+    auto deltas = vals | std::views::transform(dist);
+    return std::accumulate(deltas.begin(), deltas.end(), 0);
 }
 
 void solve_a() {
@@ -49,25 +53,21 @@ void solve_a() {
     auto middle = middlest(vals);
     cout << "middle: " << middle << '\n';
     // calculate sum of distances to middle
-    cout << "a: " << distances_to(vals, middle, "a") << '\n';
-
+    cout << distances_to(vals, middle, "a") << '\n';
 }
 
 void solve_b() {
     auto vals = positions;
-    auto best_candidate = -1;
-    auto best_dist = std::numeric_limits<int>::max();
-    for (auto candidate = *std::ranges::min_element(vals);
-         candidate <= *std::ranges::max_element(vals);
-         ++candidate) {
-        auto dist = distances_to(vals, candidate, "b");
-        if (dist < best_dist) {
-            best_candidate = candidate;
-            best_dist = dist;
-        }
-    }
-    cout << "new middle: " << best_candidate << '\n';
-    cout << "b: " << best_dist << '\n';
+    // The best position is either ceil(mean) or floor(mean)
+    // (see https://www.reddit.com/r/adventofcode/comments/rar7ty/2021_day_7_solutions/hnv4tds/
+    // for potentially fancier way of determining which is better)
+    auto mean = static_cast<float>(std::accumulate(vals.begin(), vals.end(), 0))
+        / vals.size();
+    cout << "new position either " << std::floor(mean) << " or "
+         << std::ceil(mean) << '\n';
+    auto best = std::min(distances_to(vals, std::floor(mean), "b"),
+                         distances_to(vals, std::ceil(mean), "b"));
+    cout << best << '\n';
 }
 
 int main() {
