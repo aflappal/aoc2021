@@ -46,7 +46,7 @@ auto basic_window(const Point& p) {
 }
 
 auto limit(window_type&& window, const Point& se_corner) {
-    auto within_grid = [&](const Point& p) {
+    auto within_grid = [&se_corner](const Point& p) {
         return 0 <= p.x && p.x <= se_corner.x && 0 <= p.y && p.y <= se_corner.y;
     };
     return window | std::views::filter(within_grid);
@@ -54,18 +54,18 @@ auto limit(window_type&& window, const Point& se_corner) {
 
 auto elements(const grid_type& grid, auto window) {
     return window
-        | std::views::transform([&](const Point& p) { return grid[p.y][p.x]; });
+        | std::views::transform([&grid](const Point& p) { return grid[p.y][p.x]; });
 }
 
 void solve_a() {
     auto grid = input;
-    auto is_low = [&](const Cell& c) {
+    auto is_low = [&grid](const Cell& c) {
         auto window = limit(basic_window(c.coords), grid.back().back().coords);
-        auto higher = [&](const Cell& other) { return other.val > c.val; };
+        auto higher = [&c](const Cell& other) { return other.val > c.val; };
         return std::ranges::all_of(elements(grid, window), higher);
     };
     auto low_points = grid | std::views::join | std::views::filter(is_low);
-    auto accu_func = [&](int accu, const Cell& c) {
+    auto accu_func = [](int accu, const Cell& c) {
         return accu + c.val + 1;
     };
     auto sum = std::accumulate(low_points.begin(), low_points.end(), 0, accu_func);
