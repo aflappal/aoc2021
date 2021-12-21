@@ -1,15 +1,29 @@
 #include <iostream>
 #include <vector>
+#include <array>
 #include <ranges>
 #include <algorithm>
+#include <numeric>
 #include "util.h"
 
 using std::cout, std::cerr;
 
+// XXX include val into point? Wouldn't work too well with the static windowing
+struct Point {
+    int x;
+    int y;
+};
+
+using grid_type = std::vector<std::vector<int>>;
+using window_type = std::array<Point, 4>;
+
+auto at(const grid_type& grid, const Point& p) {
+    return grid[p.y][p.x];
+}
+
 auto parse() {
-    //auto ifs = au::get_ifstream("inputs/test2_09.txt");
     auto ifs = au::get_ifstream("inputs/09.txt");
-    std::vector<std::vector<int>> grid;
+    grid_type grid;
     std::string line;
     while (std::getline(ifs, line)) {
         std::vector<int> line_nums;
@@ -21,47 +35,53 @@ auto parse() {
     return grid;
 }
 
-const auto input = parse();
-
-struct Point {
-    int x;
-    int y;
-};
-
-// Get window around o(rigo) limited to the rect defined by corners {0, 0} and
-// se_corner, inclusive.
-auto neighbours(std::vector<std::vector<int>>& grid, Point& o) {
-    Point window[] = {              {o.x, o.y-1},
-                      {o.x-1, o.y},                 {o.x+1, o.y},
-                                    {o.x, o.y+1}
-    };
-    Point se_corner = {static_cast<int>(grid[0].size()-1), static_cast<int>(grid.size()-1)};
-    auto within_grid = [&](Point& p) {
-        return 0 <= p.x && p.x <= se_corner.x && 0 <= p.y && p.y <= se_corner.y;
-    };
-    auto neighbour_view = window | std::views::filter(within_grid);
-    std::vector<int> neighbours;
-    std::ranges::transform(neighbour_view, std::back_inserter(neighbours),
-            [&](Point& p) { return grid[p.y][p.x]; });
-    return neighbours;
-}
-
-void solve_a() {
-    auto grid = input;
-    auto is_low = [&](Point&& p) {
-        auto higher = [&](int val) { return val > grid[p.y][p.x]; };
-        return std::ranges::all_of(neighbours(grid, p), higher);
-    };
-    int sum = 0;
+auto make_points(const grid_type& grid) {
+    std::vector<Point> points;
     for (std::size_t y = 0; y < grid.size(); ++y) {
         auto row = grid[y];
         for (std::size_t x = 0; x < row.size(); ++x) {
-            if (is_low({(int)x, (int)y})) {
-                sum += row[x] + 1;
-                cout << "low " << x << ' ' << y << ", add " << row[x] + 1 << ", cumsum " << sum << '\n';
-            }
+            points.push_back(Point{(int)x, (int)y});
         }
     }
+    return points;
+}
+
+const auto input_vals = parse();
+const auto input_points = make_points(input_vals);
+
+auto neighbours(const Point& p) {
+    return window_type {{
+                     {p.x, p.y-1},
+        {p.x-1, p.y},   /* p */   {p.x+1, p.y},
+                     {p.x, p.y+1}
+    }};
+}
+
+auto limit(window_type&& window, const Point& se_corner) {
+    auto within_grid = [&](Point& p) {
+        return 0 <= p.x && p.x <= se_corner.x && 0 <= p.y && p.y <= se_corner.y;
+    };
+    return window | std::views::filter(within_grid);
+}
+
+auto elements(const grid_type& grid, auto window) {
+    return window
+        | std::views::transform([&](Point& p) { return at(grid, p); });
+}
+
+void solve_a() {
+    auto grid = input_vals;
+    auto points = input_points;
+    auto is_low = [&](const Point& p) {
+        auto window = limit(neighbours(p), points.back());
+        auto higher = [&](int val) { return val > at(grid, p); };
+        return std::ranges::all_of(elements(grid, window), higher);
+    };
+    auto low_points = points | std::views::filter(is_low);
+    auto accu_func = [&](int accu, const Point& p) {
+        return accu + at(grid, p) + 1;
+    };
+    auto sum = std::accumulate(low_points.begin(), low_points.end(), 0, accu_func);
     cout << sum << '\n';
 }
 
