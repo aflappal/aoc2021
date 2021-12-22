@@ -4,6 +4,7 @@
 #include <ranges>
 #include <algorithm>
 #include <numeric>
+#include <functional>
 #include "util.h"
 
 using std::cout, std::cerr;
@@ -52,7 +53,7 @@ auto limit(window_type&& window, const Point& se_corner) {
     return window | std::views::filter(within_grid);
 }
 
-auto elements(const grid_type& grid, auto window) {
+auto elements(grid_type& grid, auto window) {
     return window
         | std::views::transform([&grid](const Point& p) { return grid[p.y][p.x]; });
 }
@@ -72,7 +73,47 @@ void solve_a() {
     cout << sum << '\n';
 }
 
+bool visited(const Cell& cell) {
+    return cell.val < 0 || cell.val == 9;
+}
+
+void visit(Point& point, grid_type& grid) {
+    // lazy way to mark cell as visited
+    grid[point.y][point.x].val = -1;
+}
+
+bool dfs(Cell& cell, grid_type& grid, std::vector<int>& labels) {
+    if (visited(cell))
+        return false;
+    visit(cell.coords, grid);
+    // just incrementing number. Don't bother labeling the cell itself since
+    // that doesn't matter here
+    labels.back()++;
+    auto window = limit(basic_window(cell.coords), grid.back().back().coords);
+    for (auto&& c : elements(grid, window)) {
+        dfs(c, grid, labels);
+    }
+    return true;
+}
+
 void solve_b() {
+    auto grid = input;
+    // each label value corresponds to the number of cells belonging to a
+    // certain connected component
+    std::vector<int> labels;
+    labels.push_back(0);
+    for (auto& cell : grid | std::views::join) {
+        if (dfs(cell, grid, labels)) {
+            // new component was just added, so add new label
+            labels.push_back(0);
+        };
+    }
+
+    // partial sort so that greatest three elements are at the front
+    std::ranges::partial_sort(labels, labels.begin()+3, std::greater{});
+    cout << std::accumulate(labels.begin(), labels.begin()+3,
+                            1, std::multiplies<int>{});
+    cout << '\n';
 }
 
 int main() {
