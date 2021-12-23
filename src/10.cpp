@@ -77,20 +77,36 @@ auto calculate_completion(auto& stack) {
     return completion;
 }
 
+// Returns {corrupted, line_error} if line corrupted, else {corrupted, completion}
+auto process_line(const std::string& line) {
+    std::vector<char> stack;
+    stack.reserve(16);
+    auto score = 0l;
+
+    auto [corrupted, line_error] = process_maybe_corrupted_line(stack, line);
+    if (corrupted) {
+        score = line_error;
+    }
+    // incomplete?
+    else if (stack.size() > 0) {
+        score = calculate_completion(stack);
+    }
+    // else uncorrupted and complete
+
+    return std::make_pair(corrupted, score);
+}
+
 void solve() {
     auto error = 0;
     std::vector<long> completions;
     for (auto& line : input) {
-        std::vector<char> stack;
-        stack.reserve(16);
-        auto [corrupted, line_error] = process_maybe_corrupted_line(stack, line);
+        const auto [corrupted, score] = process_line(line);
         if (corrupted)
-            error += line_error;
-
-        // incomplete?
-        if (!corrupted && stack.size() > 0) {
-            completions.emplace_back(calculate_completion(stack));
-        }
+            error += score;
+        // as per the spec there are no uncorrupted complete lines! So wouldn't
+        // need to check for score > 0 here
+        else if (score > 0)
+            completions.push_back(score);
     }
 
     cout << "a: " << error << '\n';
