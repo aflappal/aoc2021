@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <utility>
 #include <cassert>
 #include "util.h"
 
@@ -42,40 +43,53 @@ auto completion_for_opening(char c) {
     return -999999;
 }
 
+auto process_maybe_corrupted_line(auto& stack, const std::string& line) {
+    auto error = 0;
+    bool corrupted = false;
+    for (auto c : line) {
+        if (is_opening_paren(c)) {
+            stack.push_back(c);
+        } else {
+            assert(stack.size() > 0);
+            char opening = stack.back();
+            stack.pop_back();
+            // corrupted?
+            if (c != closing_paren(opening)) {
+                corrupted = true;
+                error = error_value_for_char(c);
+                break;
+            }
+        }
+    }
+
+    return std::make_pair(corrupted, error);
+}
+
+auto calculate_completion(auto& stack) {
+    auto completion = 0l;
+    while (stack.size() > 0) {
+        auto c = stack.back();
+        stack.pop_back();
+        // scores were specified for closing parens but just doing it
+        // directly for opening parens here
+        completion = 5 * completion + completion_for_opening(c);
+    }
+    return completion;
+}
+
 void solve() {
     auto error = 0;
     std::vector<long> completions;
     for (auto& line : input) {
         std::vector<char> stack;
         stack.reserve(16);
-        bool corrupted = false;
-        for (auto c : line) {
-            if (is_opening_paren(c)) {
-                stack.push_back(c);
-            } else {
-                assert(stack.size() > 0);
-                char opening = stack.back();
-                stack.pop_back();
-                // corrupted?
-                if (c != closing_paren(opening)) {
-                    corrupted = true;
-                    error += error_value_for_char(c);
-                    break;
-                }
-            }
-        }
+        auto [corrupted, line_error] = process_maybe_corrupted_line(stack, line);
+        if (corrupted)
+            error += line_error;
 
         // incomplete?
         if (!corrupted && stack.size() > 0) {
-            auto completion = 0l;
-            while (stack.size() > 0) {
-                auto c = stack.back();
-                stack.pop_back();
-                // scores were specified for closing parens but just doing it
-                // directly for opening parens here
-                completion = 5 * completion + completion_for_opening(c);
-            }
-            completions.push_back(completion);
+            completions.emplace_back(calculate_completion(stack));
         }
     }
 
