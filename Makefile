@@ -1,6 +1,6 @@
 # Implicitly CXX := g++
 MY_INCLUDES := $(HOME)/koodi/cpp/lib/include
-CXXFLAGS := -std=c++20 -pedantic -pedantic-errors -Wextra -Wall -MMD -iquote $(MY_INCLUDES)
+CXXFLAGS := -O -std=c++20 -pedantic -pedantic-errors -Wextra -Wall -MMD -iquote $(MY_INCLUDES)
 BUILD_DIR := ./build
 # Add wanted binary names and their deps here (%.o added automatically for every %)
 # Example
