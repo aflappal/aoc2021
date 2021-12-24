@@ -54,8 +54,25 @@ auto limit(window_type&& window, const Point& se_corner) {
 }
 
 auto elements(grid_type& grid, auto window) {
+    // With -O some of these produce incorrect results!
+
+    // correct
+    //auto point_to_cell_ref = [&grid](const Point& p) -> Cell& { return grid[p.y][p.x]; };
+    //std::vector<std::reference_wrapper<Cell>> view;
+    //for (const auto& point : window) view.push_back(point_to_cell_ref(point));
+    //return view;
+
+    // incorrect
+    //auto point_to_cell_ref = [&grid](const Point& p) -> Cell& { return grid[p.y][p.x]; };
+    //return window | std::views::transform(point_to_cell_ref);
+
+    // correct
+    //auto point_to_cell_ref = [&grid](const Point& p) -> Cell& { return grid[p.y][p.x]; };
+    //return std::views::transform(window, point_to_cell_ref);
+
+    // correct
     return window
-        | std::views::transform([&grid](const Point& p) { return grid[p.y][p.x]; });
+        | std::views::transform([&grid](const Point& p) -> Cell& { return grid[p.y][p.x]; });
 }
 
 void solve_a() {
@@ -77,15 +94,15 @@ bool visited(const Cell& cell) {
     return cell.val < 0 || cell.val == 9;
 }
 
-void visit(Point& point, grid_type& grid) {
+void visit(Cell& cell) {
     // lazy way to mark cell as visited
-    grid[point.y][point.x].val = -1;
+    cell.val = -1;
 }
 
 bool dfs(Cell& cell, grid_type& grid, std::vector<int>& labels) {
     if (visited(cell))
         return false;
-    visit(cell.coords, grid);
+    visit(cell);
     // just incrementing number. Don't bother labeling the cell itself since
     // that doesn't matter here
     labels.back()++;
