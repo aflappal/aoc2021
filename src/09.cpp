@@ -46,7 +46,7 @@ auto basic_window(const Point& p) {
     }};
 }
 
-auto limit(window_type&& window, const Point& se_corner) {
+auto limit(window_type& window, const Point& se_corner) {
     auto within_grid = [&se_corner](const Point& p) {
         return 0 <= p.x && p.x <= se_corner.x && 0 <= p.y && p.y <= se_corner.y;
     };
@@ -54,31 +54,16 @@ auto limit(window_type&& window, const Point& se_corner) {
 }
 
 auto elements(grid_type& grid, auto window) {
-    // With -O some of these produce incorrect results!
-
-    // correct
-    //auto point_to_cell_ref = [&grid](const Point& p) -> Cell& { return grid[p.y][p.x]; };
-    //std::vector<std::reference_wrapper<Cell>> view;
-    //for (const auto& point : window) view.push_back(point_to_cell_ref(point));
-    //return view;
-
-    // incorrect
-    //auto point_to_cell_ref = [&grid](const Point& p) -> Cell& { return grid[p.y][p.x]; };
-    //return window | std::views::transform(point_to_cell_ref);
-
-    // correct
-    //auto point_to_cell_ref = [&grid](const Point& p) -> Cell& { return grid[p.y][p.x]; };
-    //return std::views::transform(window, point_to_cell_ref);
-
-    // correct
-    return window
-        | std::views::transform([&grid](const Point& p) -> Cell& { return grid[p.y][p.x]; });
+    auto point_to_cell_ref = [&grid](const Point& p) -> Cell& { return grid[p.y][p.x]; };
+    return window | std::views::transform(point_to_cell_ref);
 }
 
 void solve_a() {
     auto grid = input;
     auto is_low = [&grid](const Cell& c) {
-        auto window = limit(basic_window(c.coords), grid.back().back().coords);
+        // basic falls out of scope immediately if used as rvalue in limit..?
+        auto basic = basic_window(c.coords);
+        auto window = limit(basic, grid.back().back().coords);
         auto higher = [&c](const Cell& other) { return other.val > c.val; };
         return std::ranges::all_of(elements(grid, window), higher);
     };
@@ -106,7 +91,8 @@ bool dfs(Cell& cell, grid_type& grid, std::vector<int>& labels) {
     // just incrementing number. Don't bother labeling the cell itself since
     // that doesn't matter here
     labels.back()++;
-    auto window = limit(basic_window(cell.coords), grid.back().back().coords);
+    auto basic = basic_window(cell.coords);
+    auto window = limit(basic, grid.back().back().coords);
     for (auto&& c : elements(grid, window)) {
         dfs(c, grid, labels);
     }
