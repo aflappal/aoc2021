@@ -2,6 +2,7 @@
 #include <vector>
 #include <array>
 #include <ranges>
+#include <numeric>
 #include "util.h"
 
 using std::cout, std::cerr;
@@ -71,12 +72,15 @@ void increment(auto cells) {
         ++cell.energy;
 }
 
-void reset_flashed(grid_type& grid) {
+auto reset_flashed(grid_type& grid) {
     auto flashed = [](Cell& cell) { return cell.flashed; };
+    auto count = 0;
     for (auto& cell : grid | std::views::join | std::views::filter(flashed)) {
         cell.flashed = false;
         cell.energy = 0;
+        ++count;
     }
+    return count;
 }
 
 auto do_flashes(grid_type& grid) {
@@ -92,17 +96,19 @@ auto do_flashes(grid_type& grid) {
     return flashes;
 }
 
+auto do_step(grid_type& grid) {
+    increment(grid | std::views::join);
+    while (do_flashes(grid) > 0)
+        ;
+    auto flashes = reset_flashed(grid);
+    return flashes;
+}
+
 void solve_a() {
     auto grid = input;
-    auto flashes = 0;
-    for (auto step = 0; step < 100; ++step) {
-        increment(grid | std::views::join);
-        auto new_flashes = 0;
-        while ((new_flashes = do_flashes(grid)) > 0) {
-            flashes += new_flashes;
-        }
-        reset_flashed(grid);
-    }
+    auto step_func = [&grid](auto) { return do_step(grid); };
+    auto step_flashes = au::generate_n(step_func, 100);
+    auto flashes = std::accumulate(step_flashes.begin(), step_flashes.end(), 0);
     cout << flashes << '\n';
 }
 
