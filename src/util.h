@@ -5,6 +5,7 @@
 #include <iterator>
 #include <vector>
 #include <functional>
+#include <ranges>
 
 namespace au {
 
@@ -40,6 +41,11 @@ template <typename T>
 std::vector<T> get_input_vector_from_file(std::string path) {
     auto ifs = get_ifstream(path);
     return get_vector_from_stream<T>(ifs);
+}
+
+// func = [](auto) { return ..; }, so with "no" arguments
+auto generate_n(auto& func, auto count) {
+    return std::views::iota(0, count) | std::views::transform(func);
 }
 
 } // namespace au
