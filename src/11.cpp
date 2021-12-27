@@ -20,6 +20,16 @@ struct Cell {
 using grid_type = std::vector<std::vector<Cell>>;
 using window_type = std::array<Point, 8>;
 
+void print(grid_type& grid) {
+    for (auto& row : grid) {
+        for (auto& cell : row) {
+            cout << cell.energy << ' ';
+        }
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
 auto parse() {
     auto ifs = au::get_ifstream("inputs/11.txt");
     grid_type grid;
@@ -56,42 +66,28 @@ auto elements(grid_type& grid, auto window) {
     return window | std::views::transform(point_to_cell_ref);
 }
 
-void increment(grid_type& grid) {
-    for (auto& cell : grid | std::views::join)
+void increment(auto cells) {
+    for (auto& cell : cells)
         ++cell.energy;
 }
 
 void reset_flashed(grid_type& grid) {
-    for (auto& cell : grid | std::views::join) {
-        if (cell.flashed) {
-            cell.flashed = false;
-            cell.energy = 0;
-        }
+    auto flashed = [](Cell& cell) { return cell.flashed; };
+    for (auto& cell : grid | std::views::join | std::views::filter(flashed)) {
+        cell.flashed = false;
+        cell.energy = 0;
     }
-}
-
-void print(grid_type& grid) {
-    for (auto& row : grid) {
-        for (auto& cell : row) {
-            cout << cell.energy << ' ';
-        }
-        cout << '\n';
-    }
-    cout << '\n';
 }
 
 auto do_flashes(grid_type& grid) {
     auto flashes = 0;
     auto se_corner = grid.back().back().coords;
-    for (auto& cell : grid | std::views::join) {
-        if (cell.energy > 9 && !cell.flashed) {
-            cell.flashed = true;
-            ++flashes;
-            auto basic = basic_window(cell.coords);
-            for (auto& neighbour : elements(grid, limit(basic, se_corner))) {
-                ++neighbour.energy;
-            }
-        }
+    auto must_flash = [](Cell& cell) { return cell.energy > 9 && !cell.flashed; };
+    for (auto& cell : grid | std::views::join | std::views::filter(must_flash)) {
+        cell.flashed = true;
+        ++flashes;
+        auto basic = basic_window(cell.coords);
+        increment(elements(grid, limit(basic, se_corner)));
     }
     return flashes;
 }
@@ -100,13 +96,10 @@ void solve_a() {
     auto grid = input;
     auto flashes = 0;
     for (auto step = 0; step < 100; ++step) {
-        increment(grid);
-        while (true) {
-            auto new_flashes = do_flashes(grid);
+        increment(grid | std::views::join);
+        auto new_flashes = 0;
+        while ((new_flashes = do_flashes(grid)) > 0) {
             flashes += new_flashes;
-            if (new_flashes == 0) {
-                break;
-            }
         }
         reset_flashed(grid);
     }
