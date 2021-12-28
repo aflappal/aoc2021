@@ -21,16 +21,6 @@ struct Cell {
 using grid_type = std::vector<std::vector<Cell>>;
 using window_type = std::array<Point, 8>;
 
-void print(grid_type& grid) {
-    for (auto& row : grid) {
-        for (auto& cell : row) {
-            cout << cell.energy << ' ';
-        }
-        cout << '\n';
-    }
-    cout << '\n';
-}
-
 auto parse() {
     auto ifs = au::get_ifstream("inputs/11.txt");
     grid_type grid;
@@ -55,7 +45,7 @@ auto basic_window(const Point& p) {
     }};
 }
 
-auto limit(window_type& window, const Point& se_corner) {
+auto limit(const window_type& window, const Point& se_corner) {
     auto within_grid = [&se_corner](const Point& p) {
         return 0 <= p.x && p.x <= se_corner.x && 0 <= p.y && p.y <= se_corner.y;
     };
@@ -113,6 +103,13 @@ void solve_a() {
 }
 
 void solve_b() {
+    auto grid = input;
+    const auto size = grid.size() * grid.front().size();
+    auto step = 0;
+    // all flashed at the same time when num flashed == size
+    while (do_step(grid) != (int)size)
+        ++step;
+    cout << step+1 << '\n';
 }
 
 int main() {
