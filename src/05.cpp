@@ -59,7 +59,7 @@ std::istream& operator>>(std::istream& stream, Line& in) {
 const auto lines = au::get_input_vector_from_file<Line>("inputs/05.txt");
 
 void count_overlaps(std::function<bool(const Line&)> line_filter =
-        [](const Line& line) { return true; }) {
+        [](const Line&) { return true; }) {
     std::array<std::array<int, 1000>, 1000> grid{0};
 
     for (const auto& points : lines
