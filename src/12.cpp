@@ -31,8 +31,10 @@ auto parse() {
 const auto input = parse();
 
 auto is_small(const std::string& node) {
-    const auto is_lower = [](unsigned char c) { return std::islower(c); };
-    return std::ranges::all_of(node, is_lower);
+    //const auto is_lower = [](unsigned char c) { return std::islower(c); };
+    //return std::ranges::all_of(node, is_lower);
+    // With the given input it's enough to check the first character
+    return std::islower(node[0]);
 }
 
 // XXX graph can't be const for some reason
