@@ -37,13 +37,14 @@ auto is_small(const std::string& node) {
 
 // XXX graph can't be const for some reason
 int paths_to_end(graph_type& graph, const std::string& node,
-                 std::set<std::string> visited, bool visited_twice) {
+                 std::set<std::string>& visited, bool visited_twice) {
     if (node == "end")
         return 1;
 
+    bool visited_this_twice = false;
     if (is_small(node)) {
         if (visited.contains(node)) {
-            visited_twice = true;
+            visited_twice = visited_this_twice = true;
         } else {
             visited.insert(node);
         }
@@ -56,18 +57,22 @@ int paths_to_end(graph_type& graph, const std::string& node,
     for (const auto& neigh : graph[node] | std::views::filter(can_visit)) {
         paths += paths_to_end(graph, neigh, visited, visited_twice);
     }
+    if (!visited_this_twice)
+        visited.erase(node);
     return paths;
 }
 
 void solve_a() {
     auto graph = input;
+    auto visited = std::set<std::string>();
     // visited_twice = true from the start to visit small nodes only once
-    cout << paths_to_end(graph, "start", std::set<std::string>(), true) << '\n';
+    cout << paths_to_end(graph, "start", visited, true) << '\n';
 }
 
 void solve_b() {
     auto graph = input;
-    cout << paths_to_end(graph, "start", std::set<std::string>(), false) << '\n';
+    auto visited = std::set<std::string>();
+    cout << paths_to_end(graph, "start", visited, false) << '\n';
 }
 
 int main() {
