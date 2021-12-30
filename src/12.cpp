@@ -30,16 +30,6 @@ auto parse() {
 
 const auto input = parse();
 
-void print(const graph_type& graph) {
-    for (const auto& [node, neighs] : graph) {
-        cout << node << ": ";
-        for (const auto& neigh : neighs) {
-            cout << neigh << ' ';
-        }
-        cout << '\n';
-    }
-}
-
 auto is_small(const std::string& node) {
     const auto is_lower = [](unsigned char c) { return std::islower(c); };
     return std::ranges::all_of(node, is_lower);
@@ -47,27 +37,37 @@ auto is_small(const std::string& node) {
 
 // XXX graph can't be const for some reason
 int paths_to_end(graph_type& graph, const std::string& node,
-                 std::set<std::string> visited) {
+                 std::set<std::string> visited, bool visited_twice) {
     if (node == "end")
         return 1;
 
-    if (is_small(node))
-        visited.insert(node);
+    if (is_small(node)) {
+        if (visited.contains(node)) {
+            visited_twice = true;
+        } else {
+            visited.insert(node);
+        }
+    }
 
     auto paths = 0;
-    const auto not_visited = [&](const auto& n) { return !visited.contains(n); };
-    for (const auto& neigh : graph[node] | std::views::filter(not_visited)) {
-        paths += paths_to_end(graph, neigh, visited);
+    const auto can_visit = [&](const auto& n) {
+        return n != "start" && (!visited_twice || !visited.contains(n));
+    };
+    for (const auto& neigh : graph[node] | std::views::filter(can_visit)) {
+        paths += paths_to_end(graph, neigh, visited, visited_twice);
     }
     return paths;
 }
 
 void solve_a() {
     auto graph = input;
-    cout << paths_to_end(graph, "start", std::set<std::string>()) << '\n';
+    // visited_twice = true from the start to visit small nodes only once
+    cout << paths_to_end(graph, "start", std::set<std::string>(), true) << '\n';
 }
 
 void solve_b() {
+    auto graph = input;
+    cout << paths_to_end(graph, "start", std::set<std::string>(), false) << '\n';
 }
 
 int main() {
