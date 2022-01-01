@@ -33,19 +33,15 @@ auto parse() {
     while (std::getline(ifs, line)) {
         if (line == "")
             break;
-        std::istringstream iss{line};
-        std::string xs, ys;
-        std::getline(iss, xs, ',');
-        std::getline(iss, ys);
+        auto [xs, ys] = au::split_line(line, ',');
         input.grid[std::stoi(ys)][std::stoi(xs)] = true;
     }
+
     while (std::getline(ifs, line)) {
         std::istringstream iss{line};
         // Skip "fold along "
         iss.ignore(10, ' '); iss.ignore(10, ' ');
-        std::string along, pos;
-        std::getline(iss, along, '=');
-        std::getline(iss, pos);
+        auto [along, pos] = au::split_line(iss, '=');
         // XXX can't emplace back for some reason
         input.folds.push_back({along[0], std::stoi(pos)});
     }
@@ -64,7 +60,7 @@ auto count_visible(const Grid& grid, const Point& se_corner) {
     return std::ranges::count_if(limited, is_visible);
 }
 
-// All folds are in the middle of the row/column
+// All folds are in the middle row/column
 auto do_fold(Grid& grid, const Fold& fold, const Point& se_corner) {
     if (fold.along == 'x') {
         for (auto y = 0; y < se_corner.y; ++y) {
