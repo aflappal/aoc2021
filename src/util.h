@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <iterator>
 #include <vector>
 #include <functional>
@@ -73,6 +74,18 @@ std::vector<T> get_input_vector_from_file(std::string path) {
 // func = [](auto) { return ..; }, so with "no" arguments
 auto generate_n(auto& func, auto count) {
     return std::views::iota(0, count) | std::views::transform(func);
+}
+
+auto split_line(std::istringstream& iss, const char delim) {
+    std::string first, second;
+    std::getline(iss, first, delim);
+    std::getline(iss, second);
+    return std::pair{first, second};
+}
+
+auto split_line(std::string& s, const char delim) {
+    std::istringstream iss{s};
+    return split_line(iss, delim);
 }
 
 } // namespace au
