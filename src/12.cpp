@@ -37,14 +37,13 @@ auto is_small(const std::string& node) {
     return std::islower(node[0]);
 }
 
-// XXX graph can't be const for some reason
-int paths_to_end(Graph& graph, const std::string& node,
+int paths_to_end(const Graph& graph, const std::string& node,
                  std::set<std::string>& visited, Cache& cache,
                  bool visited_twice) {
     if (node == "end")
         return 1;
 
-    const auto cache_key = std::make_tuple(node, visited, visited_twice);
+    const std::tuple cache_key = {node, visited, visited_twice};
     auto cache_it = cache.find(cache_key);
     if (cache_it != cache.end()) {
         return cache_it->second;
@@ -63,7 +62,7 @@ int paths_to_end(Graph& graph, const std::string& node,
     const auto can_visit = [&](const auto& n) {
         return n != "start" && (!visited_twice || !visited.contains(n));
     };
-    for (const auto& neigh : graph[node] | std::views::filter(can_visit)) {
+    for (const auto& neigh : graph.at(node) | std::views::filter(can_visit)) {
         paths += paths_to_end(graph, neigh, visited, cache, visited_twice);
     }
 
@@ -74,7 +73,7 @@ int paths_to_end(Graph& graph, const std::string& node,
 }
 
 void solve_a() {
-    auto graph = input;
+    const auto graph = input;
     auto visited = std::set<std::string>();
     Cache cache;
     // visited_twice = true from the start to visit small nodes only once
@@ -82,7 +81,7 @@ void solve_a() {
 }
 
 void solve_b() {
-    auto graph = input;
+    const auto graph = input;
     auto visited = std::set<std::string>();
     Cache cache;
     cout << paths_to_end(graph, "start", visited, cache, false) << '\n';
