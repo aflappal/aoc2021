@@ -5,17 +5,44 @@
 #include <iterator>
 #include <vector>
 #include <functional>
+#include <utility>
+#include <chrono>
+#include <ratio>
+#include <type_traits>
 #include <ranges>
 
 namespace au {
 
+template<typename F, typename... Args,
+    typename F_R = std::invoke_result_t<F, Args...>,
+    typename R = std::conditional_t<std::is_void_v<F_R>, int, F_R>>
+R timed(F func, Args&&... args) {
+    using std::chrono::steady_clock;
+    using std::chrono::duration;
+
+    auto t1 = steady_clock::now();
+    // XXX doesn't work for references I guess?
+    R result;
+    // If F's real return type is void then return 0 instead (we can't declare
+    // a void variable..)
+    if constexpr (std::is_void_v<F_R>) {
+        result = 0;
+        func(std::forward<Args>(args)...);
+    } else {
+        result = func(std::forward<Args>(args)...);
+    }
+    auto t2 = steady_clock::now();
+    std::cout << "\nTook " << duration<double, std::milli>(t2-t1).count() << " ms.\n";
+    return result;
+}
+
 using solve_func = std::function<void ()>;
 void solve_runner(solve_func solve_a, solve_func solve_b) {
     std::cout << "a:\n";
-    solve_a();
+    timed(solve_a);
     std::cout << "-------------------------\n"
               << "b:\n";
-    solve_b();
+    timed(solve_b);
 }
 
 std::ifstream get_ifstream(std::string path) {
